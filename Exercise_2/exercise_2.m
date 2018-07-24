@@ -6,18 +6,23 @@
 % 3. Plot the cost curve for the provided costs of different types of mistakes
 % 4. Find the optimal point of operation
 
+close all;
+
 % Read observations from file
 data = readtable('observations.csv');
 normal = data.normal;
 above_normal = data.aboveNormal;
 
+% Calculate sensible thresholds
 min_threshold = floor(min([normal; above_normal]));
 max_threshold = ceil(max([normal; above_normal]));
 thresholds = linspace(min_threshold, max_threshold);
 
-% Calculate and plot the ROC curve
-sensitivity = zeros(100, 1);
-specificity = zeros(100, 1);
+% Classifier performance
+TP = zeros(100, 1);
+FP = zeros(100, 1);
+TN = zeros(100, 1);
+FN = zeros(100, 1);
 
 for it = 1:100
     threshold = thresholds(it);
@@ -25,44 +30,31 @@ for it = 1:100
     classified_normal = normal > threshold;
     classified_above_normal = above_normal > threshold;
 
-    TP = sum(classified_above_normal);
-    % FP = sum(classified_normal);
-    TN = sum(~classified_normal);
-    % FN = sum(~classified_above_normal);
-
-    sensitivity(it) = TP / length(above_normal);
-    specificity(it) = TN / length(normal);
+    TP(it) = sum(classified_above_normal);
+    FP(it) = sum(classified_normal);
+    TN(it) = sum(~classified_normal);
+    FN(it) = sum(~classified_above_normal);
 end
 
-subplot(1, 2, 1);
-plot(1 - specificity, sensitivity);
+% Calculate and plot the ROC curve
+sensitivities = TP / length(above_normal);
+specificities = TN / length(normal);
+
+subplot(2, 2, 1);
+plot(1 - specificities, sensitivities);
 title('ROC');
 xlabel('1 - specificity / FPR');
 ylabel('sensitivity / TPR');
 grid on;
 
 % Calculate precision, recall and plot curve
-precision = zeros(100, 1);
-recall = sensitivity;
+P = TP + FP;
 
-for it = 1:100
-    threshold = thresholds(it);
+precisions = TP ./ P;
+recalls = sensitivities;
 
-    classified_normal = normal > threshold;
-    classified_above_normal = above_normal > threshold;
-
-    TP = sum(classified_above_normal);
-    FP = sum(classified_normal);
-    % TN = sum(~classified_normal);
-    % FN = sum(~classified_above_normal);
-
-    P = TP + FP;
-
-    precision(it) = TP / P;
-end
-
-subplot(1, 2, 2);
-plot(recall, precision);
+subplot(2, 2, 2);
+plot(recalls, precisions);
 title('PRC');
 xlabel('recall / PPV');
 ylabel('precision / TPR');
@@ -72,14 +64,19 @@ grid on;
 cfn = 1; % cost false negative
 cfp = 1; % cost false positive
 
-%
-% (code)
-%
+costs = cfn * FN + cfp * FP;
 
-
+subplot(2, 2, 3);
+plot(thresholds, costs);
+title('Cost function');
+xlabel('Threshold');
+ylabel('Cost');
+grid on;
 
 % Given the previous cost fuction, find the optimal threshold
-%
-% (code)
-%
+optimal_threshold = thresholds(find(costs == min(costs)));
+
+subplot(2, 2, 4);
+text(0.5, 0.5, sprintf('Optimal threshold = %.4f', optimal_threshold), 'horizontalalignment', 'center', 'fontweight', 'bold');
+set(gca, 'visible', 'off');
 
