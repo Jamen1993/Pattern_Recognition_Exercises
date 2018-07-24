@@ -1,15 +1,17 @@
 % pr_exercise_3.m
 
 % Read again the sescirption and answer the following:
-% 
+%
 % 1. Based on your observations are all the selected featured needed for correct classifications?
 %
 % 2. Based on the assumptiom that the selected features are conditionally independent classify the observations
 %
 % 3. Visualize the risk of a wrong decision for observetion 5 by varying the coordinates under the assumption of a Zero-One loss model
 
+close all;
+
 % load data
-observations = importdata('pr_exercise_3_observations.txt', ',', 1);
+observations_1 = readtable('observations.csv');
 
 % Task 1
 %
@@ -17,7 +19,7 @@ observations = importdata('pr_exercise_3_observations.txt', ',', 1);
 %
 
 % Task 2
-observations = [42.12 10.43 37.7 5.0 2.1;
+observations_2 = [42.12 10.43 37.7 5.0 2.1;
                 49.82 22.89 38.6 3.4 3.9;
                 58.90 18.71 40.1 2.2 7.7;
                 32.85 06.35 38.2 8.6 1.0;
