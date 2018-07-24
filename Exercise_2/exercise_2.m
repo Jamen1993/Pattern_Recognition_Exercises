@@ -74,9 +74,10 @@ ylabel('Cost');
 grid on;
 
 % Given the previous cost fuction, find the optimal threshold
-optimal_threshold = thresholds(find(costs == min(costs)));
+[~, index_min] = min(costs);
+optimal_threshold = thresholds(index_min);
 
 subplot(2, 2, 4);
-text(0.5, 0.5, sprintf('Optimal threshold = %.4f', optimal_threshold), 'horizontalalignment', 'center', 'fontweight', 'bold');
+text(0.5, 0.5, sprintf('Optimal threshold = %.2f', optimal_threshold), 'horizontalalignment', 'center', 'fontweight', 'bold');
 set(gca, 'visible', 'off');
 
