@@ -11,11 +11,11 @@ data = readtable('observations.csv');
 normal = data.normal;
 above_normal = data.aboveNormal;
 
-% Calculate and plot the ROC curve
 min_threshold = floor(min([normal; above_normal]));
 max_threshold = ceil(max([normal; above_normal]));
 thresholds = linspace(min_threshold, max_threshold);
 
+% Calculate and plot the ROC curve
 sensitivity = zeros(100, 1);
 specificity = zeros(100, 1);
 
@@ -34,6 +34,7 @@ for it = 1:100
     specificity(it) = TN / length(normal);
 end
 
+subplot(1, 2, 1);
 plot(1 - specificity, sensitivity);
 title('ROC');
 xlabel('1 - specificity / FPR');
@@ -41,10 +42,31 @@ ylabel('sensitivity / TPR');
 grid on;
 
 % Calculate precision, recall and plot curve
-%
-% (code)
-%
+precision = zeros(100, 1);
+recall = sensitivity;
 
+for it = 1:100
+    threshold = thresholds(it);
+
+    classified_normal = normal > threshold;
+    classified_above_normal = above_normal > threshold;
+
+    TP = sum(classified_above_normal);
+    FP = sum(classified_normal);
+    % TN = sum(~classified_normal);
+    % FN = sum(~classified_above_normal);
+
+    P = TP + FP;
+
+    precision(it) = TP / P;
+end
+
+subplot(1, 2, 2);
+plot(recall, precision);
+title('PRC');
+xlabel('recall / PPV');
+ylabel('precision / TPR');
+grid on;
 
 % Given the following costs, plot the cost function below
 cfn = 1; % cost false negative
