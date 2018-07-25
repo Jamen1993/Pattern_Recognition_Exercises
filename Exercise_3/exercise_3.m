@@ -58,12 +58,41 @@ body_temperature_stds = std(body_temperature, 1);
 % Non standard shaped distribution with good seperation of classes
 bin_edges = 0:0.5:10;
 tiredness_distributions = zeros(length(bin_edges) - 1, 4);
-
+% for each class
 for it = 1:4
     tiredness_distributions(:, it) = histcounts(tiredness(:, it), bin_edges);
 end
+% Normalise to get pdf
+tiredness_distributions = tiredness_distributions ./ sum(tiredness_distributions, 1);
 
-% Compute
+
+% Compute sample likelihood for each class and feature
+% Sample index is row index and class index is column index
+
+% Gaussian distributed features
+Latitude_probabilities = gaussian_probability(observations_2(:, 1), latitude_means, latitude_stds);
+Longitude_probabilities = gaussian_probability(observations_2(:, 2), longitude_means, longitude_stds);
+Body_temperature_probabilities = gaussian_probability(observations_2(:, 3), body_temperature_means, body_temperature_stds);
+
+% Tiredness
+% Determine bin index
+bin_indices = floor(observations_2(:, 4) / 0.5) + 1;
+
+Tiredness_probabilities = tiredness_distributions(bin_indices, :);
+
+% Likelihood
+Likelihoods = Latitude_probabilities .* Longitude_probabilities .* Body_temperature_probabilities .* Tiredness_probabilities;
+
+% Apply Bayes to get posterior likelihood
+priors = [4 1 3 2] / 10;
+
+Posteriors = Likelihoods .* priors;
+
+% Select class with maximum likelihood
+
+[~, labels] = max(Posteriors, [], 2);
+
+labels
 
 %% Task 3
 %
@@ -74,6 +103,7 @@ function plot_histogram(data, name)
     figure('name', name);
     limits = [floor(min(data(:))) ceil(max(data(:)))];
 
+    % for each class
     for it = 1:size(data, 2)
         subplot(4, 1, it);
         histogram(data(:, it));
@@ -81,4 +111,12 @@ function plot_histogram(data, name)
         xlim(limits);
         title(sprintf('Disease %d %s = %.2f std = %.2f', it, '\mu', mean(data(:, it)), std(data(:, it))));
     end
+end
+
+function probability = gaussian_probability(x, m, s)
+    scaling_factor = sqrt(2 * pi) .* s;
+    numerator = (x - m) .^ 2;
+    denominator = 2 * s .^ 2;
+
+    probability = exp(-numerator ./ denominator) ./ scaling_factor;
 end
