@@ -54,6 +54,9 @@ longitude_stds = std(longitude, 1);
 body_temperature_means = mean(body_temperature, 1);
 body_temperature_stds = std(body_temperature, 1);
 
+means = [latitude_means; longitude_means; body_temperature_means];
+stds = [latitude_stds; longitude_stds; body_temperature_stds];
+
 % Tiredness
 % Non standard shaped distribution with good seperation of classes
 bin_edges = 0:0.5:10;
@@ -65,32 +68,14 @@ end
 % Normalise to get pdf
 tiredness_distributions = tiredness_distributions ./ sum(tiredness_distributions, 1);
 
-
-% Compute sample likelihood for each class and feature
-% Sample index is row index and class index is column index
-
-% Gaussian distributed features
-Latitude_probabilities = gaussian_probability(observations_2(:, 1), latitude_means, latitude_stds);
-Longitude_probabilities = gaussian_probability(observations_2(:, 2), longitude_means, longitude_stds);
-Body_temperature_probabilities = gaussian_probability(observations_2(:, 3), body_temperature_means, body_temperature_stds);
-
-% Tiredness
-% Determine bin index
-bin_indices = floor(observations_2(:, 4) / 0.5) + 1;
-
-Tiredness_probabilities = tiredness_distributions(bin_indices, :);
-
-% Likelihood
-Likelihoods = Latitude_probabilities .* Longitude_probabilities .* Body_temperature_probabilities .* Tiredness_probabilities;
-
-% Apply Bayes to get posterior likelihood
+% Class probabilities
 priors = [4 1 3 2] / 10;
 
-Posteriors = Likelihoods .* priors;
+labels = zeros(6, 1);
 
-% Select class with maximum likelihood
-
-[~, labels] = max(Posteriors, [], 2);
+for it = 1:6
+    [labels(it), ~] = classify(observations_2(it, :), means, stds, tiredness_distributions, priors);
+end
 
 disp('Classification Result:');
 disp(labels);
@@ -102,8 +87,6 @@ disp(labels);
 variation = linspace(-30, 30);
 % Grid for surface plot
 [X, Y] = meshgrid(variation, variation);
-% The given sample is classified as disease 4. We have to calculate the risk over the other possible classes.
-other_classes = 1:3;
 
 Risk = zeros(100);
 
@@ -113,25 +96,7 @@ for ix = 1:100
         % Create new observation by varying the 5th sample.
         variated_observation = observations_2(5, :) + [X(ix, iy) Y(ix, iy) 0 0 0];
 
-        % Gaussian distributed features
-        latitude_probabilities = gaussian_probability(variated_observation(1), latitude_means, latitude_stds);
-        longitude_probabilities = gaussian_probability(variated_observation(2), longitude_means, longitude_stds);
-        body_temperature_probabilities = gaussian_probability(variated_observation(3), body_temperature_means, body_temperature_stds);
-
-        % Tiredness
-        % Determine bin index
-        bin_index = floor(variated_observation(4) / 0.5) + 1;
-
-        tiredness_probabilities = tiredness_distributions(bin_index, :);
-
-        % Likelihood
-        likelihoods = latitude_probabilities .* longitude_probabilities .* body_temperature_probabilities .* tiredness_probabilities;
-
-        % Apply Bayes to get posterior likelihood
-        posteriors = likelihoods .* priors;
-
-        % Select class with maximum likelihood
-        [~, label] = max(posteriors);
+        [label, posteriors] = classify(variated_observation, means, stds, tiredness_distributions, priors);
 
         other_classes = setdiff(1:4, label);
 
@@ -171,4 +136,20 @@ function probability = gaussian_probability(x, m, s)
     denominator = 2 * s .^ 2;
 
     probability = exp(-numerator ./ denominator) ./ scaling_factor;
+end
+
+function [label, posteriors] = classify(x, means, stds, tiredness_distributions, priors)
+    % Gaussian distributed features
+    latitude_probabilities = gaussian_probability(x(1), means(1, :), stds(1, :));
+    longitude_probabilities = gaussian_probability(x(2), means(2, :), stds(2, :));
+    body_temperature_probabilities = gaussian_probability(x(3), means(3, :), stds(3, :));
+    % Tiredness
+    bin_index = floor(x(4) / 0.5) + 1;
+    tiredness_probabilities = tiredness_distributions(bin_index, :);
+    % Likelihood
+    likelihoods = latitude_probabilities .* longitude_probabilities .* body_temperature_probabilities .* tiredness_probabilities;
+    % Apply Bayes to get posterior likelihood
+    posteriors = likelihoods .* priors;
+    % Select class with maximum likelihood
+    [~, label] = max(posteriors);
 end
