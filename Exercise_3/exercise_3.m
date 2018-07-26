@@ -92,7 +92,8 @@ Posteriors = Likelihoods .* priors;
 
 [~, labels] = max(Posteriors, [], 2);
 
-labels
+disp('Classification Result:');
+disp(labels);
 
 %% Task 3
 %
