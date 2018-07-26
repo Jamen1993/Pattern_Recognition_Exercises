@@ -96,9 +96,60 @@ disp('Classification Result:');
 disp(labels);
 
 %% Task 3
-%
-% (code)
-%
+% The task is to visualise the conditional risk of classification of the 5th sample from task 2 over variation of latitude and longitude while assuming that the real class is still the same as before.
+
+% Both parameters are variated ±10
+variation = linspace(-30, 30);
+% Grid for surface plot
+[X, Y] = meshgrid(variation, variation);
+% The given sample is classified as disease 4. We have to calculate the risk over the other possible classes.
+other_classes = 1:3;
+
+Risk = zeros(100);
+
+% Conditional risk for each combination
+for ix = 1:100
+    for iy = 1:100
+        % Create new observation by varying the 5th sample.
+        variated_observation = observations_2(5, :) + [X(ix, iy) Y(ix, iy) 0 0 0];
+
+        % Gaussian distributed features
+        latitude_probabilities = gaussian_probability(variated_observation(1), latitude_means, latitude_stds);
+        longitude_probabilities = gaussian_probability(variated_observation(2), longitude_means, longitude_stds);
+        body_temperature_probabilities = gaussian_probability(variated_observation(3), body_temperature_means, body_temperature_stds);
+
+        % Tiredness
+        % Determine bin index
+        bin_index = floor(variated_observation(4) / 0.5) + 1;
+
+        tiredness_probabilities = tiredness_distributions(bin_index, :);
+
+        % Likelihood
+        likelihoods = latitude_probabilities .* longitude_probabilities .* body_temperature_probabilities .* tiredness_probabilities;
+
+        % Apply Bayes to get posterior likelihood
+        posteriors = likelihoods .* priors;
+
+        % Select class with maximum likelihood
+        [~, label] = max(posteriors);
+
+        other_classes = setdiff(1:4, label);
+
+        Risk(ix, iy) = sum(posteriors(other_classes));
+    end
+end
+% Normalise risk to maximum value
+Risk = Risk / max(Risk(:));
+
+figure('name', 'Conditional Risk');
+sh = surf(X, Y, Risk);
+sh.EdgeAlpha = 0.2;
+grid on;
+axis vis3d;
+colorbar;
+title('Conditional Risk with respect to Position Variation');
+xlabel('\DeltaLatitude');
+ylabel('\DeltaLongitude');
 
 function plot_histogram(data, name)
     figure('name', name);
