@@ -23,6 +23,9 @@
 
 
 function exercise_6()
+
+close all;
+
 % threshold of the basic Psychometric function
 T = 4;
 
@@ -55,14 +58,17 @@ i=1;
 % a convergence measure could be used for termination
 while (i<200)
     % get response for current sample (see below for a provided function)
-    % *** (code)
+    r = Response(c, T);
 
     % calculate new probability for each model based on response and previous step probability
     % M_n(end,j) is the previous step proability of model j
-    % *** (code)
-
+    if r == 1
+        M = M_n(end, :) .* Psychometric(c, T, displacements);
+    else
+        M = M_n(end, :) .* (1 - Psychometric(c, T, displacements));
+    end
     % normalize new probabilities
-    % *** (code)
+    M = M ./ sum(M);
 
     % add sample to history
     cHist = [cHist c];
@@ -72,7 +78,7 @@ while (i<200)
 
     % calculate new sample. Equals to the threshold of the
     % model which currently has the highest probability
-    [m, index] = max(M);
+    [~, index] = max(M);
     c = T + displacements(index); % basic T plus displacement of model
     i = i+1;
 end
@@ -105,6 +111,7 @@ y = repmat(displacements, size(M_n,1),1);
 figure;
 surf(x,y,M_n, 'EdgeColor', 'none');
 grid on;
+axis vis3d;
 ylabel('x');
 xlabel('iteration');
 zlabel('probability of each model');
@@ -154,10 +161,10 @@ end
 % output:
 %   p   - probability of correct response for point c of the displaced by d psycometric function
 
-function p = Psychometric(c,T,d)
-    c = c-d;
+function p = Psychometric(c, T, d)
+    c = c - d;
     c(c(:)<0) = 0;
-    p = 1 - 0.5*exp(-(c/T).^3.5);
+    p = 1 - 0.5 * exp(-(c / T) .^ 3.5);
 end
 
 end
