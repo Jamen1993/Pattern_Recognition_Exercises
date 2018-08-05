@@ -43,6 +43,13 @@ We use the *law of total probability* to derive the marginal probability $p(R_n)
 
 $$p(T|R) = \frac{p_{n-1}(T|R) \cdot p(R_n|T)}{p(R_n)} \Leftarrow p(R_n) = \sum_T p(R_n|T) \cdot p_{n-1}(T)$$
 
-or we could just neglect $p(R_n)$, because it's the same for all models, and normalise $p(T|R)$ to a sum of 1, which we do in the exercise.
+or we could just neglect $p(R_n)$, because it's the same for all models, and normalise $p(T|R)$ to a sum of 1, which we do in the exercise because it leads to the same result anyway.
 
 We do this recursion for a number of iterations that is acceptable - we do 200 in the exercise - and plot the result.
+
+## Exercise 8
+This exercise featured one of the most popular clustering algorithms called *k-means* or *vector quantisation*.
+
+Clustering algorithms aim to reveal structure in the data by finding suitable class centres that result in a low reconstruction or classification error of the test data. The topic for this exercise was to implement k-means which is an iterative clustering algorithm that is guaranteed to converge eventually.
+
+We start by defining a set of starting class centres - or codebook vectors. I randomly select some of the data points for that purpose. The next step is to find the nearest codebook vector for each data point which associates it with one of the codebook vectors. The last step is to move each codebook vector into the centroid - the mean in the feature space - of the associated data points. The algorithm finishes when no codebook vector has moved more than a threshold.
