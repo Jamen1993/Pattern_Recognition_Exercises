@@ -7,7 +7,6 @@ X = [1.0 1.7
      0.7 2.2
      2.6 1.9]';
 
-% W = k_means(X, X(:, [1 4]));
 selection = unique(randi(5, 1, 5));
 W = k_means(X, X(:, selection));
 
