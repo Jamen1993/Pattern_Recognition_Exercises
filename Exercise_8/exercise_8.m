@@ -7,7 +7,9 @@ X = [1.0 1.7
      0.7 2.2
      2.6 1.9]';
 
-W = k_means(X, X(:, [1 4]));
+% W = k_means(X, X(:, [1 4]));
+selection = unique(randi(5, 1, 5));
+W = k_means(X, X(:, selection));
 
 function W = k_means(X, W0)
     % Codebook vectors
@@ -35,16 +37,14 @@ function W = k_means(X, W0)
             delta_w(:, it_w) = W(:, it_w) - new_w;
             W(:, it_w) = new_w;
         end
-
-        W_hist = [W_hist, W(:)];
-
         % Termination criterion
         delta_w = abs(delta_w);
-        if sum(delta_w(:) < minimum_change)
+        if ~sum(delta_w(:) > minimum_change)
             break;
+        else
+            W_hist = [W_hist, W(:)];
         end
     end
-
     % Plot result
     plot(X(1, :), X(2, :), 'bo');
     hold on;
@@ -55,5 +55,4 @@ function W = k_means(X, W0)
     end
     hold off;
     grid on;
-
 end
