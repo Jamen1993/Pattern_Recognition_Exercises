@@ -10,26 +10,23 @@ X = [1.0 1.7
 W = k_means(X, X(:, [1 4]));
 
 function W = k_means(X, W0)
-    % Number of clusters
-    k = size(W0, 2);
     % Codebook vectors
     W = W0;
     % History of codebook vectors
-    W_hist = [];
+    W_hist = W(:);
 
     minimum_change = 1e-3;
     delta_w = ones(size(W));
 
     while true
         % Compute distances between xi and all codebook vectors
-        dists = zeros(1, size(W0, 2));
         nn = zeros(1, size(X, 2));
 
         for it_x = 1:size(X, 2)
-            for it_w = 1:size(W, 2)
-                dists(it_w) = norm(X(:, it_x) - W(:, it_w));
-            end
-            % NN classification
+            dists = X(:, it_x) - W;
+            dists = dists .^ 2;
+            dists = sum(dists, 1);
+            % Determine NN codebook vector
             [~, nn(it_x)] = min(dists);
         end
         % Move codebook vectors into their centroids
@@ -39,16 +36,24 @@ function W = k_means(X, W0)
             W(:, it_w) = new_w;
         end
 
-        plot(X(1, :), X(2, :), 'bo');
-        hold on;
-        plot(W(1, :), W(2, :), 'go')
-        hold off;
-        grid on;
+        W_hist = [W_hist, W(:)];
 
+        % Termination criterion
         delta_w = abs(delta_w);
-        if ~sum(delta_w(:) > minimum_change)
+        if sum(delta_w(:) < minimum_change)
             break;
         end
     end
+
+    % Plot result
+    plot(X(1, :), X(2, :), 'bo');
+    hold on;
+    for it = 1:size(W_hist, 2)
+        colour = 1 - ones(1, 3) * it / size(W_hist, 2);
+        tmp = reshape(W_hist(:, it), [], size(W, 2));
+        plot(tmp(1, :), tmp(2, :), 'o', 'markeredgecolor', colour);
+    end
+    hold off;
+    grid on;
 
 end
